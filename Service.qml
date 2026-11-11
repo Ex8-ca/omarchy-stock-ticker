@@ -16,6 +16,18 @@ Item {
   property var quotes: []
   readonly property color upColor: "#3fb950"
   readonly property color downColor: "#f85149"
+  // True while any symbol moved past the alert threshold; drives the strip flash.
+  readonly property bool anyAlert: quotes.some(q => q.alert)
+  readonly property int alertWindowMin: quotes.length && quotes[0].win ? quotes[0].win : 15
+  property real flash: 0   // 0..1 pulse, animated below
+  SequentialAnimation on flash {
+    running: root.anyAlert && !Style.reduceMotion
+    loops: Animation.Infinite
+    NumberAnimation { from: 0; to: 1; duration: 500; easing.type: Easing.InOutSine }
+    NumberAnimation { from: 1; to: 0; duration: 500; easing.type: Easing.InOutSine }
+    onStopped: root.flash = 0
+  }
+  readonly property real alertLevel: Style.reduceMotion ? (anyAlert ? 0.6 : 0) : flash
   readonly property int stripHeight: Math.round(Style.font.body * 1.8)
 
   Process {
@@ -64,6 +76,15 @@ Item {
                   spacing: Style.space(6)
                   leftPadding: Style.space(14)
                   readonly property bool up: modelData.d5 >= 0
+                  readonly property bool alerting: modelData.alert === true
+                  readonly property color alertColor: modelData.pctw >= 0 ? root.upColor : root.downColor
+                  Rectangle {
+                    // flashing highlight behind an alerting symbol
+                    z: -1
+                    anchors.fill: parent
+                    visible: parent.alerting
+                    color: Qt.rgba(parent.alertColor.r, parent.alertColor.g, parent.alertColor.b, 0.15 + 0.45 * root.alertLevel)
+                  }
                   Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.s; color: Color.foreground; font { family: Style.font.family; pixelSize: Style.font.body; bold: true } }
                   Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.p.toFixed(2); color: Color.muted; font { family: Style.font.family; pixelSize: Style.font.body } }
                   Text {
@@ -71,6 +92,13 @@ Item {
                     text: (up ? "▲ " : "▼ ") + Math.abs(modelData.d5).toFixed(2) + " (" + Math.abs(modelData.pct5).toFixed(2) + "%)"
                     color: up ? root.upColor : root.downColor
                     font { family: Style.font.family; pixelSize: Style.font.body }
+                  }
+                  Text {
+                    visible: alerting
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "⚠ " + (modelData.pctw >= 0 ? "+" : "−") + Math.abs(modelData.pctw).toFixed(1) + "% / " + root.alertWindowMin + "m"
+                    color: alertColor
+                    font { family: Style.font.family; pixelSize: Style.font.body; bold: true }
                   }
                 }
               }
