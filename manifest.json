@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ex8-ca.stock-ticker",
   "name": "Stock Ticker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Ex8-ca",
   "license": "MIT",
   "description": "A scrolling stock ticker under the Omarchy bar, with red and green arrows for each symbol's move over the last 5 minutes.",
