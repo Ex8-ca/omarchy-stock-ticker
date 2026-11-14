@@ -23,9 +23,9 @@ Quotes refresh every 60 seconds.
 A terminal UI edits the symbol list, schedule and alert settings, so you don't have to touch the JSON:
 
 ```sh
-python3 ~/.local/share/omarchy/plugins/stock-ticker/configure.py   # path of your install/clone
+python3 ~/.config/omarchy/plugins/io.github.ex8-ca.stock-ticker/configure.py
 # or, in a floating Omarchy terminal:
-omarchy-launch-tui python3 /path/to/configure.py
+omarchy-launch-tui python3 ~/.config/omarchy/plugins/io.github.ex8-ca.stock-ticker/configure.py
 ```
 
 Arrow keys to move, Enter/space to edit or toggle, `s` to save, `q` to quit. In the symbols list, `a` adds (each symbol is checked against Yahoo first) and `d` deletes. Other keys in the config file are preserved. Changes apply within a minute.
