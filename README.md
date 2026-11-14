@@ -18,6 +18,18 @@ Optional `~/.config/omarchy/stock-ticker.json` (default is a list of ~17 large c
 
 Quotes refresh every 60 seconds.
 
+## Settings UI
+
+A terminal UI edits the symbol list, schedule and alert settings, so you don't have to touch the JSON:
+
+```sh
+python3 ~/.local/share/omarchy/plugins/stock-ticker/configure.py   # path of your install/clone
+# or, in a floating Omarchy terminal:
+omarchy-launch-tui python3 /path/to/configure.py
+```
+
+Arrow keys to move, Enter/space to edit or toggle, `s` to save, `q` to quit. In the symbols list, `a` adds (each symbol is checked against Yahoo first) and `d` deletes. Other keys in the config file are preserved. Changes apply within a minute.
+
 ## Schedule
 
 By default the ticker runs all the time. To show it only at certain times, add a `schedule` (system local time, 24-hour). Outside the window the strip is hidden and no requests are made:
