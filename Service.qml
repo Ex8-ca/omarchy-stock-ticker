@@ -14,6 +14,7 @@ Item {
   property var pluginRegistry: null
 
   property var quotes: []
+  property bool scheduleActive: true   // false outside the configured schedule; hides the strip
   readonly property color upColor: "#3fb950"
   readonly property color downColor: "#f85149"
   // True while any symbol moved past the alert threshold; drives the strip flash.
@@ -35,7 +36,12 @@ Item {
     command: ["python3", Qt.resolvedUrl("fetch.py").toString().replace("file://", "")]
     stdout: StdioCollector {
       onStreamFinished: {
-        try { const q = JSON.parse(text); if (q.length) root.quotes = q } catch (e) {}
+        try {
+          const r = JSON.parse(text)
+          root.scheduleActive = r.active !== false
+          if (!root.scheduleActive) root.quotes = []
+          else if (r.quotes && r.quotes.length) root.quotes = r.quotes
+        } catch (e) {}
       }
     }
   }

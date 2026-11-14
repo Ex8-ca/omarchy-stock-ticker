@@ -18,6 +18,16 @@ Optional `~/.config/omarchy/stock-ticker.json` (default is a list of ~17 large c
 
 Quotes refresh every 60 seconds.
 
+## Schedule
+
+By default the ticker runs all the time. To show it only at certain times, add a `schedule` (system local time, 24-hour). Outside the window the strip is hidden and no requests are made:
+
+```json
+{ "schedule": { "start": "06:00", "end": "17:00", "days": ["mon", "tue", "wed", "thu", "fri"] } }
+```
+
+`days` defaults to every day, `start`/`end` to the whole day; `start` later than `end` means an overnight window. The schedule is checked on each 60-second refresh, so changes take effect within a minute.
+
 ## Move alerts
 
 If a symbol moves 5% or more over a 15-minute window (up or down), its entry in the strip flashes green/red and shows `⚠ +5.3% / 15m`. Tune it in the same config file:

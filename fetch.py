@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Print a JSON list [{s, p, d5, pct5, pctw, alert}] per symbol: price, move over the last 5 minutes,
+"""Print {"active": bool, "quotes": [{s, p, d5, pct5, pctw, alert}]}. Per symbol: price, move over the last 5 minutes,
 and the move over the alert window (default 15 min) with alert=true when |pctw| >= threshold (default 5%).
 
 Feed: Yahoo Finance's public 1-minute chart endpoint (no API key, unofficial, may change).
 Config (optional): ~/.config/omarchy/stock-ticker.json
-  {"symbols": ["AAPL", ...], "alertPercent": 5, "alertWindowMinutes": 15}
+  {"symbols": ["AAPL", ...], "alertPercent": 5, "alertWindowMinutes": 15,
+   "schedule": {"start": "06:00", "end": "17:00", "days": ["mon", "tue", "wed", "thu", "fri"]}}
+Schedule (optional, local time): outside it, active=false and no requests are made. Omit for always on.
 """
-import json, os, urllib.parse, urllib.request
+import datetime, json, os, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 DEFAULT = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "AMD", "NFLX",
@@ -31,6 +33,29 @@ CFG = config()
 ALERT_PCT = number(CFG.get("alertPercent"), 5.0)
 ALERT_WIN = number(CFG.get("alertWindowMinutes"), 15.0) * 60
 
+DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+def minutes(v, default):
+    try:
+        h, m = str(v).split(":")
+        return int(h) * 60 + int(m)
+    except Exception:
+        return default
+
+def active(now=None):
+    sch = CFG.get("schedule")
+    if not isinstance(sch, dict):
+        return True
+    now = now or datetime.datetime.now()
+    days = sch.get("days")
+    days = [str(d).lower()[:3] for d in days] if isinstance(days, list) else DAYS
+    if DAYS[now.weekday()] not in days:
+        return False
+    start, end = minutes(sch.get("start"), 0), minutes(sch.get("end"), 24 * 60)
+    cur = now.hour * 60 + now.minute
+    # start > end means an overnight window (e.g. 18:00-02:00)
+    return start <= cur < end if start <= end else (cur >= start or cur < end)
+
 def symbols():
     s = CFG.get("symbols")
     if isinstance(s, list) and s:
@@ -53,5 +78,8 @@ def quote(sym):
     except Exception:
         return None
 
-with ThreadPoolExecutor(8) as ex:
-    print(json.dumps([q for q in ex.map(quote, symbols()) if q]))
+if not active():
+    print(json.dumps({"active": False, "quotes": []}))
+else:
+    with ThreadPoolExecutor(8) as ex:
+        print(json.dumps({"active": True, "quotes": [q for q in ex.map(quote, symbols()) if q]}))
